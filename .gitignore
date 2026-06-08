@@ -1,0 +1,14 @@
+# Haskell
+.stack-work/
+*~
+
+# Node
+node_modules/
+dist/
+
+# Env
+.env
+.env.*
+
+# Claude
+CLAUDE.md
