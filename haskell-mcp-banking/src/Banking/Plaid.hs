@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Plaid
+module Banking.Plaid
   ( PlaidConfig (..),
     PlaidError (..),
     createLinkToken,

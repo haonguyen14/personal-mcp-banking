@@ -2,17 +2,21 @@
 
 module Main (main) where
 
-import API (API, bankingServer)
+import Banking.API (API, bankingServer)
+import Banking.Plaid (PlaidConfig (..))
+import Banking.Tools.GetTransactions (GetTransactionsTool (..))
 import Control.Concurrent.STM (newTVarIO)
+import Data.Text (pack)
+import qualified Data.Text.Encoding as TE
+import Email.Tools.ArchiveEmails (ArchiveEmailsTool (..))
+import Email.Tools.GetEmails (GetEmailsTool (..))
 import McpTypes (ServerInfo (..))
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors
-import Plaid (PlaidConfig (..))
 import Servant (Proxy (..), serve, (:<|>) (..))
 import Server (MCPRegistry (..), mcpServer)
-import System.Environment (getEnv)
+import System.Environment (getEnv, lookupEnv)
 import Tool (SomeTool (..))
-import Tools.GetTransactions (GetTransactionsTool (..))
 
 main :: IO ()
 main = do
@@ -20,6 +24,8 @@ main = do
   secret <- getEnv "PLAID_SECRET"
   env <- getEnv "PLAID_ENV"
   redirectUri <- getEnv "PLAID_REDIRECT_URI"
+  accessToken <- (pack <$>) <$> lookupEnv "PLAID_ACCESS_TOKEN"
+  fastmailToken <- TE.encodeUtf8 . pack <$> getEnv "FASTMAIL_API_TOKEN"
 
   let cfg =
         PlaidConfig
@@ -29,20 +35,24 @@ main = do
             plaidRedirectUri = redirectUri
           }
 
-  tokenVar <- newTVarIO Nothing
+  tokenVar <- newTVarIO accessToken
 
   let registry =
         MCPRegistry
           { serverInfo =
               ServerInfo
-                { serverName = "haskell-mcp-banking",
-                  serverTitle = "Banking MCP Server",
+                { serverName = "haskell-mcp-personal",
+                  serverTitle = "Personal Assistant MCP Server",
                   serverVersion = "0.1.0.0",
-                  serverDescription = "MCP server for personal finance via Plaid"
+                  serverDescription = "MCP server for personal finance and email management"
                 },
             serverInstruction = "Send JSON-RPC requests to /mcp",
             prompts = [],
-            tools = [SomeTool (GetTransactionsTool cfg tokenVar)],
+            tools =
+              [ SomeTool (GetTransactionsTool cfg tokenVar),
+                SomeTool (GetEmailsTool fastmailToken),
+                SomeTool (ArchiveEmailsTool fastmailToken)
+              ],
             resources = []
           }
 

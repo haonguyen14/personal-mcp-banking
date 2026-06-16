@@ -2,15 +2,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Tools.GetTransactions (GetTransactionsTool (..)) where
+module Banking.Tools.GetTransactions (GetTransactionsTool (..)) where
 
+import Banking.Plaid (PlaidConfig, getTransactions)
 import Control.Concurrent.STM (TVar, readTVarIO)
 import Control.Monad.Except (runExceptT)
 import Data.Aeson (FromJSON (..), Value, object, withObject, (.:), (.:?), (.=))
 import qualified Data.Aeson.Types as Aeson
 import Data.Text (Text)
 import qualified Data.Text as T
-import Plaid (PlaidConfig, getTransactions)
 import Tool
 
 data GetTransactionsTool = GetTransactionsTool PlaidConfig (TVar (Maybe Text))

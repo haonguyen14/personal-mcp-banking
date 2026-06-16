@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 
-module API
+module Banking.API
   ( API,
     BankingAPI,
     LinkTokenResponse (..),
@@ -13,6 +13,7 @@ module API
   )
 where
 
+import Banking.Plaid (PlaidConfig, PlaidError (..), createLinkToken, exchangePublicToken)
 import Control.Concurrent.STM (TVar, atomically, readTVarIO, writeTVar)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
@@ -20,7 +21,6 @@ import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Plaid (PlaidConfig, PlaidError (..), createLinkToken, exchangePublicToken)
 import Servant
 import Server (JSONRpc)
 
@@ -65,7 +65,9 @@ handleExchangeToken cfg tokenVar req = do
   case result of
     Left err -> throwError $ toServantError err
     Right accessToken -> do
-      liftIO $ atomically $ writeTVar tokenVar (Just accessToken)
+      liftIO $ do
+        print accessToken
+        atomically $ writeTVar tokenVar (Just accessToken)
       return NoContent
 
 handleCheckConnection :: TVar (Maybe Text) -> Handler ConnectionStatus

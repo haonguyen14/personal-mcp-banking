@@ -31,6 +31,10 @@ dependencies:
 - mtl
 - servant-server
 - wai-cors
+- vector
+- wreq
+- lens
+- transformers
 
 ghc-options:
 - -Wall
